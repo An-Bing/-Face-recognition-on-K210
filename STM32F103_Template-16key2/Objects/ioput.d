@@ -3,7 +3,7 @@
 .\objects\ioput.o: .\SYSTEM\sys\sys.h
 .\objects\ioput.o: .\Start\stm32f10x.h
 .\objects\ioput.o: .\Start\core_cm3.h
-.\objects\ioput.o: E:\work\keil\core\ARM\960\Bin\..\include\stdint.h
+.\objects\ioput.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 .\objects\ioput.o: .\Start\system_stm32f10x.h
 .\objects\ioput.o: .\User\stm32f10x_conf.h
 .\objects\ioput.o: .\Library\inc\stm32f10x_adc.h
@@ -32,4 +32,4 @@
 .\objects\ioput.o: .\Library\inc\misc.h
 .\objects\ioput.o: .\SYSTEM\delay\delay.h
 .\objects\ioput.o: .\HARDWARE\LCD\lcd.h
-.\objects\ioput.o: E:\work\keil\core\ARM\960\Bin\..\include\stdlib.h
+.\objects\ioput.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

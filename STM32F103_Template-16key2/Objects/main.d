@@ -1,7 +1,7 @@
 .\objects\main.o: User\main.c
 .\objects\main.o: .\Start\stm32f10x.h
 .\objects\main.o: .\Start\core_cm3.h
-.\objects\main.o: E:\work\keil\core\ARM\960\Bin\..\include\stdint.h
+.\objects\main.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 .\objects\main.o: .\Start\system_stm32f10x.h
 .\objects\main.o: .\User\stm32f10x_conf.h
 .\objects\main.o: .\Library\inc\stm32f10x_adc.h
@@ -31,11 +31,11 @@
 .\objects\main.o: .\SYSTEM\delay\delay.h
 .\objects\main.o: .\SYSTEM\sys\sys.h
 .\objects\main.o: .\HARDWARE\LCD\lcd.h
-.\objects\main.o: E:\work\keil\core\ARM\960\Bin\..\include\stdlib.h
+.\objects\main.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 .\objects\main.o: .\HARDWARE\IOput\IOput.h
 .\objects\main.o: .\SYSTEM\TIMER\timer.h
 .\objects\main.o: .\SYSTEM\usart\usart.h
 .\objects\main.o: .\HARDWARE\TX510\TX510.h
 .\objects\main.o: .\HARDWARE\DS1302\ds1302.h
-.\objects\main.o: E:\work\keil\core\ARM\960\Bin\..\include\stdio.h
-.\objects\main.o: E:\work\keil\core\ARM\960\Bin\..\include\string.h
+.\objects\main.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+.\objects\main.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\string.h

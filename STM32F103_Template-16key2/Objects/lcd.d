@@ -3,7 +3,7 @@
 .\objects\lcd.o: .\SYSTEM\sys\sys.h
 .\objects\lcd.o: .\Start\stm32f10x.h
 .\objects\lcd.o: .\Start\core_cm3.h
-.\objects\lcd.o: E:\work\keil\core\ARM\960\Bin\..\include\stdint.h
+.\objects\lcd.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 .\objects\lcd.o: .\Start\system_stm32f10x.h
 .\objects\lcd.o: .\User\stm32f10x_conf.h
 .\objects\lcd.o: .\Library\inc\stm32f10x_adc.h
@@ -30,7 +30,7 @@
 .\objects\lcd.o: .\Library\inc\stm32f10x_usart.h
 .\objects\lcd.o: .\Library\inc\stm32f10x_wwdg.h
 .\objects\lcd.o: .\Library\inc\misc.h
-.\objects\lcd.o: E:\work\keil\core\ARM\960\Bin\..\include\stdlib.h
+.\objects\lcd.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 .\objects\lcd.o: HARDWARE\LCD\oledfont.h
 .\objects\lcd.o: .\SYSTEM\delay\delay.h
-.\objects\lcd.o: E:\work\keil\core\ARM\960\Bin\..\include\string.h
+.\objects\lcd.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\string.h

@@ -2,7 +2,7 @@
 .\objects\jq8400.o: HARDWARE\JQ8400\jq8400.h
 .\objects\jq8400.o: .\Start\stm32f10x.h
 .\objects\jq8400.o: .\Start\core_cm3.h
-.\objects\jq8400.o: E:\work\keil\core\ARM\960\Bin\..\include\stdint.h
+.\objects\jq8400.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 .\objects\jq8400.o: .\Start\system_stm32f10x.h
 .\objects\jq8400.o: .\User\stm32f10x_conf.h
 .\objects\jq8400.o: .\Library\inc\stm32f10x_adc.h

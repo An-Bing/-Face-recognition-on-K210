@@ -2,7 +2,7 @@
 .\objects\usart.o: SYSTEM\usart\usart.h
 .\objects\usart.o: .\Start\stm32f10x.h
 .\objects\usart.o: .\Start\core_cm3.h
-.\objects\usart.o: E:\work\keil\core\ARM\960\Bin\..\include\stdint.h
+.\objects\usart.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 .\objects\usart.o: .\Start\system_stm32f10x.h
 .\objects\usart.o: .\User\stm32f10x_conf.h
 .\objects\usart.o: .\Library\inc\stm32f10x_adc.h
@@ -32,6 +32,6 @@
 .\objects\usart.o: .\SYSTEM\delay\delay.h
 .\objects\usart.o: .\SYSTEM\sys\sys.h
 .\objects\usart.o: .\SYSTEM\TIMER\timer.h
-.\objects\usart.o: E:\work\keil\core\ARM\960\Bin\..\include\stdarg.h
-.\objects\usart.o: E:\work\keil\core\ARM\960\Bin\..\include\string.h
-.\objects\usart.o: E:\work\keil\core\ARM\960\Bin\..\include\stdio.h
+.\objects\usart.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\objects\usart.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\objects\usart.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h

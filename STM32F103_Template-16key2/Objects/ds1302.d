@@ -3,7 +3,7 @@
 .\objects\ds1302.o: .\SYSTEM\sys\sys.h
 .\objects\ds1302.o: .\Start\stm32f10x.h
 .\objects\ds1302.o: .\Start\core_cm3.h
-.\objects\ds1302.o: E:\work\keil\core\ARM\960\Bin\..\include\stdint.h
+.\objects\ds1302.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 .\objects\ds1302.o: .\Start\system_stm32f10x.h
 .\objects\ds1302.o: .\User\stm32f10x_conf.h
 .\objects\ds1302.o: .\Library\inc\stm32f10x_adc.h

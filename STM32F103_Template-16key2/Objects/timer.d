@@ -3,7 +3,7 @@
 .\objects\timer.o: .\SYSTEM\sys\sys.h
 .\objects\timer.o: .\Start\stm32f10x.h
 .\objects\timer.o: .\Start\core_cm3.h
-.\objects\timer.o: E:\work\keil\core\ARM\960\Bin\..\include\stdint.h
+.\objects\timer.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 .\objects\timer.o: .\Start\system_stm32f10x.h
 .\objects\timer.o: .\User\stm32f10x_conf.h
 .\objects\timer.o: .\Library\inc\stm32f10x_adc.h
@@ -30,5 +30,5 @@
 .\objects\timer.o: .\Library\inc\stm32f10x_usart.h
 .\objects\timer.o: .\Library\inc\stm32f10x_wwdg.h
 .\objects\timer.o: .\Library\inc\misc.h
-.\objects\timer.o: E:\work\keil\core\ARM\960\Bin\..\include\stdio.h
+.\objects\timer.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 .\objects\timer.o: .\SYSTEM\usart\usart.h

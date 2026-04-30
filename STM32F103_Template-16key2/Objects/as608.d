@@ -1,11 +1,11 @@
 .\objects\as608.o: HARDWARE\AS608\as608.c
-.\objects\as608.o: E:\work\keil\core\ARM\960\Bin\..\include\string.h
-.\objects\as608.o: E:\work\keil\core\ARM\960\Bin\..\include\stdio.h
+.\objects\as608.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\objects\as608.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 .\objects\as608.o: .\SYSTEM\delay\delay.h
 .\objects\as608.o: .\SYSTEM\sys\sys.h
 .\objects\as608.o: .\Start\stm32f10x.h
 .\objects\as608.o: .\Start\core_cm3.h
-.\objects\as608.o: E:\work\keil\core\ARM\960\Bin\..\include\stdint.h
+.\objects\as608.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 .\objects\as608.o: .\Start\system_stm32f10x.h
 .\objects\as608.o: .\User\stm32f10x_conf.h
 .\objects\as608.o: .\Library\inc\stm32f10x_adc.h
@@ -35,5 +35,5 @@
 .\objects\as608.o: HARDWARE\AS608\as608.h
 .\objects\as608.o: .\SYSTEM\usart\usart.h
 .\objects\as608.o: .\HARDWARE\LCD\lcd.h
-.\objects\as608.o: E:\work\keil\core\ARM\960\Bin\..\include\stdlib.h
+.\objects\as608.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 .\objects\as608.o: .\HARDWARE\IOput\IOput.h
