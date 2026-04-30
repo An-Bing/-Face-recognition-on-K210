@@ -39,10 +39,6 @@ void input_init(void)
     gpio.GPIO_Mode = GPIO_Mode_IPD;
     gpio.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOA, &gpio);
-
-    gpio.GPIO_Pin = GPIO_Pin_1;
-    gpio.GPIO_Mode = GPIO_Mode_IPD;
-    GPIO_Init(GPIOB, &gpio);
 }
 
 static u8 Key_ScanRow(u8 row_index, u8 mode)
@@ -66,26 +62,22 @@ static u8 Key_ScanRow(u8 row_index, u8 mode)
         ROW4 = 1;
     }
 
-    delay_ms(10);
+    delay_ms(1);
 
     if(COL1)
     {
-        while(COL1 && mode);
         return 0;
     }
     if(COL2)
     {
-        while(COL2 && mode);
         return 1;
     }
     if(COL3)
     {
-        while(COL3 && mode);
         return 2;
     }
     if(COL4)
     {
-        while(COL4 && mode);
         return 3;
     }
 
@@ -95,42 +87,61 @@ static u8 Key_ScanRow(u8 row_index, u8 mode)
 u8 key_scan(u8 mode)
 {
     u8 col;
+    u8 raw_key = KEY_NONE;
+    static u8 last_key = KEY_NONE;
 
     col = Key_ScanRow(0, mode);
     if(col != KEY_NONE)
     {
-        if(col == 0) return KEY_1;
-        if(col == 1) return KEY_2;
-        if(col == 2) return KEY_3;
-        return KEY_SET;
+        if(col == 0) raw_key = KEY_1;
+        else if(col == 1) raw_key = KEY_2;
+        else if(col == 2) raw_key = KEY_3;
+        else raw_key = KEY_SET;
+        goto KEY_DONE;
     }
 
     col = Key_ScanRow(1, mode);
     if(col != KEY_NONE)
     {
-        if(col == 0) return KEY_4;
-        if(col == 1) return KEY_5;
-        if(col == 2) return KEY_6;
-        return KEY_ADD;
+        if(col == 0) raw_key = KEY_4;
+        else if(col == 1) raw_key = KEY_5;
+        else if(col == 2) raw_key = KEY_6;
+        else raw_key = KEY_ADD;
+        goto KEY_DONE;
     }
 
     col = Key_ScanRow(2, mode);
     if(col != KEY_NONE)
     {
-        if(col == 0) return KEY_7;
-        if(col == 1) return KEY_8;
-        if(col == 2) return KEY_9;
-        return KEY_DEC;
+        if(col == 0) raw_key = KEY_7;
+        else if(col == 1) raw_key = KEY_8;
+        else if(col == 2) raw_key = KEY_9;
+        else raw_key = KEY_DEC;
+        goto KEY_DONE;
     }
 
     col = Key_ScanRow(3, mode);
     if(col != KEY_NONE)
     {
-        if(col == 0) return KEY_Asterisk;
-        if(col == 1) return KEY_0;
-        if(col == 2) return KEY_Hashtag;
-        return KEY_SAVE;
+        if(col == 0) raw_key = KEY_Asterisk;
+        else if(col == 1) raw_key = KEY_0;
+        else if(col == 2) raw_key = KEY_Hashtag;
+        else raw_key = KEY_SAVE;
+        goto KEY_DONE;
     }
 
-    return KEY_NONE;
+KEY_DONE:
+    if(raw_key == KEY_NONE)
+    {
+        last_key = KEY_NONE;
+        return KEY_NONE;
+    }
+    if(raw_key == last_key)
+    {
+        return KEY_NONE;
+    }
+    last_key = raw_key;
+    return raw_key;
 }
+
+

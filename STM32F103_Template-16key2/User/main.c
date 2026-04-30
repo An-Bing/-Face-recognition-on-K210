@@ -6,6 +6,7 @@
 #include "usart.h"
 #include "TX510.h"
 #include "ds1302.h"
+#include "SR501.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -68,6 +69,11 @@ static u8 linger_triggered = 0;
 static u8 alarm_active = 0;
 static u8 unlock_latched = 0;
 static u8 linger_threshold_s = LINGER_THRESHOLD_DEFAULT_S;
+static u8 oled_page_index = 0;
+static u8 alarm_reason = 0;
+static u8 op_face_result = 0;
+static u8 op_pwd_result = 0;
+static u8 op_face_manage = 0;
 
 static u16 door_open_tick = 0;
 static u16 pir_start_tick = 0;
@@ -84,6 +90,19 @@ static char last_alarm_stamp[20] = "00-00-00 00:00:00";
 
 static char oled_line_cache[4][40];
 static u8 oled_line_valid[4] = {0};
+
+#define ALARM_REASON_NONE        0
+#define ALARM_REASON_PASSWORD    1
+#define ALARM_REASON_FACE        2
+#define ALARM_REASON_LINGER      3
+
+#define OP_RESULT_NONE           0
+#define OP_RESULT_SUCCESS        1
+#define OP_RESULT_FAIL           2
+
+#define OP_FACE_MNG_NONE         0
+#define OP_FACE_MNG_ADD          1
+#define OP_FACE_MNG_DEL          2
 
 static u8 OLED_LineSlot(u8 y)
 {
@@ -353,7 +372,7 @@ static u16 GetLingerSeconds(void)
 
 static void PIR_Task(void)
 {
-    pir_state = PIR_IN ? 1 : 0;
+    pir_state = (HC_SR501_Status() == ENABLE) ? 1 : 0;
 
     if(pir_state)
     {
@@ -367,6 +386,7 @@ static void PIR_Task(void)
         {
             linger_triggered = 1;
             SaveCurrentStamp(last_linger_stamp);
+            alarm_reason = ALARM_REASON_LINGER;
             TriggerAlarm();
         }
     }
@@ -445,6 +465,7 @@ static void Face_BackgroundTask(void)
         else if(state == K210_FACE_KNOWN)
         {
             face_fail_count = 0;
+            op_face_result = OP_RESULT_SUCCESS;
             if(!door_state && !unlock_latched && !alarm_active && Door_OpenAllowed())
             {
                 Door_OpenBy(OPEN_SRC_FACE);
@@ -453,6 +474,7 @@ static void Face_BackgroundTask(void)
         }
         else if(state == K210_FACE_UNKNOWN)
         {
+            op_face_result = OP_RESULT_FAIL;
             if(!alarm_active)
             {
                 if((u16)(time_count - last_face_fail_tick) >= FACE_FAIL_INTERVAL_MS)
@@ -464,6 +486,7 @@ static void Face_BackgroundTask(void)
                     }
                     if(face_fail_count >= 3)
                     {
+                        alarm_reason = ALARM_REASON_FACE;
                         TriggerAlarm();
                     }
                 }
@@ -495,39 +518,114 @@ static const char* StringOfStars(u8 count)
 static void ShowIdlePage(void)
 {
     char line0[20];
-    char line2[20];
-    char line4[20];
-    char line6[20];
+    char line2[24];
+    char line4[24];
+    char line6[32];
 
-    // 第1行: OLED.时间 (正好16个字符，占用128像素不越界)
     snprintf(line0, sizeof(line0), "%02d-%02d-%02d%02d:%02d:%02d",
-						 RtcTime.year,
+                         RtcTime.year,
              RtcTime.month,
              RtcTime.day,
              RtcTime.hour,
              RtcTime.minute,RtcTime.second);
-    OLED_ShowLineASCII(0, line0);
 
-    // 第2行: 红外状态
-    if(pir_state)
+    if(oled_page_index == 0)
     {
-        snprintf(line2, sizeof(line2), "红外状态:有人 ");
+        OLED_ShowLineASCII(0, line0);
+        if(pir_state)
+        {
+            snprintf(line2, sizeof(line2), "红外状态:有人 ");
+        }
+        else
+        {
+            snprintf(line2, sizeof(line2), "红外状态:无人 ");
+        }
+        OLED_ShowLineASCII(2, line2);
+        OLED_ShowLineASCII(4, "A切换");
+        OLED_ShowLineASCII(6, "D注册人脸");
+    }
+    else if(oled_page_index == 1)
+    {
+        OLED_ShowLineASCII(0, line0);
+        OLED_ShowLineASCII(2, "页面2");
+        OLED_ShowLineASCII(4, "A切换");
+        OLED_ShowLineASCII(6, "D修改密码");
+    }
+        else if(oled_page_index == 2)
+    {
+        u8 show_reason = ALARM_REASON_NONE;
+        u8 pwd_alarm = (password_fail_count >= 3) ? 1 : 0;
+        u8 face_alarm = (face_fail_count >= 3) ? 1 : 0;
+        u8 linger_alarm = (linger_triggered && (GetLingerSeconds() >= linger_threshold_s)) ? 1 : 0;
+
+        if(alarm_active)
+        {
+            if(alarm_reason == ALARM_REASON_PASSWORD) pwd_alarm = 1;
+            else if(alarm_reason == ALARM_REASON_FACE) face_alarm = 1;
+            else if(alarm_reason == ALARM_REASON_LINGER) linger_alarm = 1;
+        }
+
+        if(pwd_alarm)
+        {
+            show_reason = ALARM_REASON_PASSWORD;
+        }
+        else if(face_alarm)
+        {
+            show_reason = ALARM_REASON_FACE;
+        }
+        else if(linger_alarm)
+        {
+            show_reason = ALARM_REASON_LINGER;
+        }
+
+        OLED_ShowLineASCII(0, "系统状态");
+        if(show_reason == ALARM_REASON_PASSWORD)
+        {
+            OLED_ShowLineASCII(2, "报警:密码错误");
+        }
+        else if(show_reason == ALARM_REASON_FACE)
+        {
+            OLED_ShowLineASCII(2, "报警:人脸识别失败");
+        }
+        else if(show_reason == ALARM_REASON_LINGER)
+        {
+            OLED_ShowLineASCII(2, "报警:逗留超时");
+        }
+        else
+        {
+            OLED_ShowLineASCII(2, "无报警");
+        }
+        OLED_ShowLineASCII(4, " ");
+        OLED_ShowLineASCII(6, "A切换");
     }
     else
     {
-        snprintf(line2, sizeof(line2), "红外状态:无人 ");
+        OLED_ShowLineASCII(0, line0);
+
+        if(op_face_result == OP_RESULT_SUCCESS) snprintf(line2, sizeof(line2), "人脸识别:成功");
+        else if(op_face_result == OP_RESULT_FAIL) snprintf(line2, sizeof(line2), "人脸识别:失败");
+        else snprintf(line2, sizeof(line2), "人脸识别:无");
+
+        snprintf(line4, sizeof(line4), "密码失败:%d次", password_fail_count);
+
+        if(op_face_manage == OP_FACE_MNG_ADD)
+        {
+            snprintf(line6, sizeof(line6), "逗留:%ds", (int)GetLingerSeconds());
+        }
+        else if(op_face_manage == OP_FACE_MNG_DEL)
+        {
+            snprintf(line6, sizeof(line6), "逗留:%ds", (int)GetLingerSeconds());
+        }
+        else
+        {
+            snprintf(line6, sizeof(line6), "逗留:%ds", (int)GetLingerSeconds());
+        }
+
+        OLED_ShowLineASCII(2, line2);
+        OLED_ShowLineASCII(4, line4);
+        OLED_ShowLineASCII(6, line6);
     }
-    OLED_ShowLineASCII(2, line2);
-
-    // 第3行: 按键提示1 (去除多余空格以防超出屏幕16个字符)
-    snprintf(line4, sizeof(line4), "*退出#确定A切换 ");
-    OLED_ShowLineASCII(4, line4);
-
-    // 第4行: 按键提示2
-    snprintf(line6, sizeof(line6), "B录入C删除D注册 ");
-    OLED_ShowLineASCII(6, line6);
 }
-
 static void ShowAdminPage(void)
 {
     OLED_ClearPage();
@@ -537,7 +635,6 @@ static void ShowAdminPage(void)
     {
         case UI_PAGE_ADMIN:
             OLED_ShowCH(0, 2, "   B录入 C删除 ");
-            OLED_ShowCH(0, 4, "   A时间设置 ");
             OLED_ShowCH(0, 6, "  *退出 ");
             break;
         case UI_PAGE_ADMIN_TIME:
@@ -646,8 +743,11 @@ static u8 Password_VerifyLine(u8 *line2)
     if(memcmp(in_code, Code, PASSWORD_LEN) == 0)
     {
         password_fail_count = 0;
+        op_pwd_result = OP_RESULT_SUCCESS;
         return VERIFY_SUCCESS;
     }
+
+    op_pwd_result = OP_RESULT_FAIL;
 
     if(password_fail_count < 3)
     {
@@ -655,6 +755,7 @@ static u8 Password_VerifyLine(u8 *line2)
     }
     if(password_fail_count >= 3)
     {
+        alarm_reason = ALARM_REASON_PASSWORD;
         TriggerAlarm();
     }
 
@@ -664,6 +765,25 @@ static u8 Password_VerifyLine(u8 *line2)
 static u8 Password_VerifyCurrent(void)
 {
     return Password_VerifyLine((u8 *)"   请输入密码 ");
+}
+
+static void PasswordChange_Process(void);
+
+static void PasswordModifyWithOld_Process(void)
+{
+    u8 state;
+
+    state = Password_VerifyLine((u8 *)"   请输入原密码 ");
+    if(state == VERIFY_SUCCESS)
+    {
+        PasswordChange_Process();
+        return;
+    }
+
+    if(state == VERIFY_DENY)
+    {
+        ShowTimedMessage((u8 *)"   原密码错误 ", 0, 800);
+    }
 }
 
 static u8 WaitAdminFace(void)
@@ -871,6 +991,7 @@ static void FaceRegister_Process(void)
     state = WaitK210Register(0xFF, &actual_slot);
     if(state == VERIFY_SUCCESS)
     {
+        op_face_manage = OP_FACE_MNG_ADD;
         ShowTimedMessage((u8 *)"   注册成功 ", (u8 *)"   保存人脸 ", 600);
         snprintf(line, sizeof(line), "ID:%02d", actual_slot);
         OLED_ClearPage();
@@ -887,7 +1008,7 @@ static void FaceRegister_Process(void)
     {
         ShowTimedMessage((u8 *)"    超时 ", 0, 800);
     }
-    ui_page = UI_PAGE_IDLE;
+    ui_page = UI_PAGE_ADMIN;
 }
 
 // C键进入人脸删除
@@ -943,6 +1064,7 @@ static void FaceDelete_Process(void)
             state = WaitK210Delete(face_slot);
             if(state == VERIFY_SUCCESS)
             {
+                op_face_manage = OP_FACE_MNG_DEL;
                 ShowTimedMessage((u8 *)"   删除成功 ", 0, 800);
             }
             else if(state == VERIFY_DENY)
@@ -960,6 +1082,22 @@ static void FaceDelete_Process(void)
 }
 
 // #键开门
+static void DoorOpen_Process(void);
+
+static void DoorOpenByPassword_Process(void)
+{
+    u8 state;
+
+    state = Password_VerifyCurrent();
+    if(state == VERIFY_SUCCESS)
+    {
+        DoorOpen_Process();
+    }
+    else if(state == VERIFY_DENY)
+    {
+        ShowTimedMessage((u8 *)"   密码错误 ", 0, 800);
+    }
+}
 static void DoorOpen_Process(void)
 {
     if(!Door_OpenAllowed())
@@ -1146,14 +1284,13 @@ static void PasswordChange_Process(void)
     u8 count = 0;
     u8 blink = 0;
     u16 blink_tick = time_count;
-    char mask[10];
 
-    // 输入新密码
     memset(new_code, 0, sizeof(new_code));
     OLED_ClearPage();
     OLED_ShowCH(0, 0, "   修改密码 ");
     OLED_ShowCH(0, 2, "   输入新密码 ");
     OLED_ShowCH(0, 4, "  *退出 #确认 ");
+    Password_DrawMask(count, blink);
 
     while(1)
     {
@@ -1163,16 +1300,7 @@ static void PasswordChange_Process(void)
         {
             blink_tick = time_count;
             blink = !blink;
-            if(count < PASSWORD_LEN)
-            {
-                snprintf(mask, sizeof(mask), "PWD:%s%*s", 
-                         StringOfStars(count), (int)(PASSWORD_LEN - count - (blink ? 1 : 0)), "");
-            }
-            else
-            {
-                snprintf(mask, sizeof(mask), "PWD:******");
-            }
-            OLED_ShowLineASCII(6, mask);
+            Password_DrawMask(count, blink);
         }
 
         if(key_num <= KEY_9)
@@ -1180,8 +1308,7 @@ static void PasswordChange_Process(void)
             if(count < PASSWORD_LEN)
             {
                 new_code[count++] = key_num;
-                snprintf(mask, sizeof(mask), "PWD:%s", StringOfStars(count));
-                OLED_ShowLineASCII(6, mask);
+                Password_DrawMask(count, 0);
             }
         }
         else if(key_num == KEY_Asterisk)
@@ -1194,13 +1321,15 @@ static void PasswordChange_Process(void)
         }
     }
 
-    // 确认新密码
     memset(confirm_code, 0, sizeof(confirm_code));
     OLED_ClearPage();
     OLED_ShowCH(0, 0, "   修改密码 ");
     OLED_ShowCH(0, 2, "   确认新密码 ");
+    OLED_ShowCH(0, 4, "  *退出 #确认 ");
     count = 0;
+    blink = 0;
     blink_tick = time_count;
+    Password_DrawMask(count, blink);
 
     while(1)
     {
@@ -1210,16 +1339,7 @@ static void PasswordChange_Process(void)
         {
             blink_tick = time_count;
             blink = !blink;
-            if(count < PASSWORD_LEN)
-            {
-                snprintf(mask, sizeof(mask), "PWD:%s%*s",
-                         StringOfStars(count), (int)(PASSWORD_LEN - count - (blink ? 1 : 0)), "");
-            }
-            else
-            {
-                snprintf(mask, sizeof(mask), "PWD:******");
-            }
-            OLED_ShowLineASCII(6, mask);
+            Password_DrawMask(count, blink);
         }
 
         if(key_num <= KEY_9)
@@ -1227,8 +1347,7 @@ static void PasswordChange_Process(void)
             if(count < PASSWORD_LEN)
             {
                 confirm_code[count++] = key_num;
-                snprintf(mask, sizeof(mask), "PWD:%s", StringOfStars(count));
-                OLED_ShowLineASCII(6, mask);
+                Password_DrawMask(count, 0);
             }
         }
         else if(key_num == KEY_Asterisk)
@@ -1241,7 +1360,6 @@ static void PasswordChange_Process(void)
         }
     }
 
-    // 比较两次输入
     if(memcmp(new_code, confirm_code, PASSWORD_LEN) == 0)
     {
         memcpy(Code, new_code, PASSWORD_LEN);
@@ -1252,7 +1370,6 @@ static void PasswordChange_Process(void)
         ShowTimedMessage((u8 *)"   两次不同 ", 0, 800);
     }
 }
-
 int main(void)
 {
     delay_init();
@@ -1268,6 +1385,7 @@ int main(void)
     USART3_Init(115200);
 
     DS1302_Init();
+    HC_SR501Configuration();
     DS1302_ReadTime(&RtcTime);
 
     TIM2_Int_Init(71, 999);
@@ -1322,13 +1440,29 @@ int main(void)
             switch(ui_page)
             {
                 case UI_PAGE_IDLE:
-                    if(key_num == KEY_Hashtag)      // #开门
+                    if(key_num == KEY_SET)          // A切换页面
                     {
-                        DoorOpen_Process();
+                        oled_page_index = (u8)((oled_page_index + 1) % 4);
+                        OLED_ClearPage();
                     }
-                    else if(key_num == KEY_SAVE)   // D管理认证
+                    else if(key_num == KEY_Hashtag)      // #开门
                     {
-                        AdminAuth_Process();
+                        DoorOpenByPassword_Process();
+                    }
+                    else if(key_num == KEY_SAVE)   // D按页面执行
+                    {
+                        if(oled_page_index == 0)
+                        {
+                            admin_verified = 1;
+                            admin_verify_tick = time_count;
+                            ui_page = UI_PAGE_ADMIN;
+                            OLED_ClearPage();
+                        }
+                        else if(oled_page_index == 1)
+                        {
+                            PasswordModifyWithOld_Process();
+                            ui_page = UI_PAGE_IDLE;
+                        }
                     }
                     break;
                     
@@ -1346,10 +1480,7 @@ int main(void)
                     {
                         FaceDelete_Process();
                     }
-                    else if(key_num == KEY_SET)    // A切换
-                    {
-                        AdminMenu_Switch();
-                    }
+                    
                     break;
                     
                 case UI_PAGE_ADMIN_TIME:
@@ -1382,3 +1513,48 @@ int main(void)
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

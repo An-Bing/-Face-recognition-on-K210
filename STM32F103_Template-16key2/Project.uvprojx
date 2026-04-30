@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>.\Start;.\Library\inc;.\User;.\SYSTEM\delay;.\SYSTEM\sys;.\SYSTEM\usart;.\HARDWARE\LCD;.\HARDWARE\IOput;.\SYSTEM\TIMER;.\HARDWARE\AS608;.\HARDWARE\WonderCam;.\HARDWARE\RC522;.\HARDWARE\RC522;.\HARDWARE\TX510;.\HARDWARE\JQ8400;.\HARDWARE\DS1302</IncludePath>
+              <IncludePath>.\Start;.\Library\inc;.\User;.\SYSTEM\delay;.\SYSTEM\sys;.\SYSTEM\usart;.\HARDWARE\LCD;.\HARDWARE\IOput;.\SYSTEM\TIMER;.\HARDWARE\AS608;.\HARDWARE\WonderCam;.\HARDWARE\RC522;.\HARDWARE\RC522;.\HARDWARE\TX510;.\HARDWARE\JQ8400;.\HARDWARE\DS1302;.\HARDWARE\HC-SR501</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -598,6 +598,11 @@
               <FileName>ds1302.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\HARDWARE\DS1302\ds1302.c</FilePath>
+            </File>
+            <File>
+              <FileName>SR501.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\HARDWARE\HC-SR501\SR501.c</FilePath>
             </File>
           </Files>
         </Group>
