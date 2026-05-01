@@ -81,6 +81,7 @@ static u16 last_ui_tick = 0;
 static u16 last_rtc_tick = 0;
 static u16 last_cloud_tick = 0;
 static u16 last_face_fail_tick = 0;
+static u16 last_esp_img_tick = 0;
 static u16 admin_verify_tick = 0;
 static u16 alarm_start_tick = 0;
 
@@ -212,6 +213,23 @@ static void SaveCurrentStamp(char *buf)
     BuildStamp(buf, &RtcTime);
 }
 
+static void ESP_BuildFaceStub(u8 faceid, u8 *buf, u16 w, u16 h)
+{
+    u16 x;
+    u16 y;
+    for(y = 0; y < h; y++)
+    {
+        for(x = 0; x < w; x++)
+        {
+            u8 v = (u8)((x * 7 + y * 11 + faceid * 13) & 0xFF);
+            if(x > 4 && x < (u16)(w - 5) && y > 3 && y < (u16)(h - 3))
+            {
+                v = (u8)(v / 2 + 80);
+            }
+            buf[y * w + x] = v;
+        }
+    }
+}
 // ==================== ·äÃùÆ÷(±¨¾¯)¿ØÖÆ ====================
 static void Alarm_Set(u8 on)
 {
@@ -428,6 +446,13 @@ static void Cloud_ReportTask(void)
 
     last_cloud_tick = time_count;
     BuildStamp(now_stamp, &RtcTime);
+    {
+        char esp_log[120];
+        snprintf(esp_log, sizeof(esp_log), "door=%d,pir=%d,linger=%d,sec=%d,admin=%d,face=%d,ffail=%d,alarm=%d,total=%d,time=%s",
+                 door_state,pir_state,linger_triggered,GetLingerSeconds(),admin_verified,face_state,face_fail_count,alarm_active,face_total,now_stamp);
+        ESP01S_SendLogLine(esp_log);
+    }
+
     UsartPrintf(USART1,
                 "@S,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s\r\n",
                 door_state,
@@ -469,6 +494,25 @@ static void Face_BackgroundTask(void)
             if(!door_state && !unlock_latched && !alarm_active && Door_OpenAllowed())
             {
                 Door_OpenBy(OPEN_SRC_FACE);
+                if((u16)(time_count - last_esp_img_tick) > 3000)
+                {
+                    u8 img_buf[16 * 16];
+                    u8 iw = 0;
+                    u8 ih = 0;
+                    u8 iseq = 0;
+
+                    if(K210_FetchGrayImage(img_buf, sizeof(img_buf), &iw, &ih, &iseq))
+                    {
+                        ESP01S_SendBlurEncryptedImage(img_buf, iw, ih, (u8)(0x5A ^ face_id ^ iseq));
+                    }
+                    else
+                    {
+                        u8 face_stub[16 * 16];
+                        ESP_BuildFaceStub(face_id, face_stub, 16, 16);
+                        ESP01S_SendBlurEncryptedImage(face_stub, 16, 16, (u8)(0x5A ^ face_id));
+                    }
+                    last_esp_img_tick = time_count;
+                }
                 unlock_latched = 1;
             }
         }
@@ -1513,6 +1557,10 @@ int main(void)
         }
     }
 }
+
+
+
+
 
 
 

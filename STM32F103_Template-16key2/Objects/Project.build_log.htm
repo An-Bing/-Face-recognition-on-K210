@@ -22,30 +22,38 @@ Dialog DLL:      TCM.DLL V1.56.6.0
  
 <h2>Project:</h2>
 C:\Users\ab\Desktop\Project\Pro_07_Face_Door_git\-Face-recognition-on-K210\STM32F103_Template-16key2\Project.uvprojx
-Project File Date:  04/29/2026
+Project File Date:  04/30/2026
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Target 1'
+compiling TX510.c...
+compiling timer.c...
+compiling usart.c...
+compiling as608.c...
 compiling main.c...
-User\main.c(1384): warning:  #1-D: last line of file ends without a newline
-  }
-User\main.c(56): warning:  #550-D: variable "door_open_source"  was set but never used
+User\main.c(57): warning:  #550-D: variable "door_open_source"  was set but never used
   static u8 door_open_source = OPEN_SRC_NONE;
-User\main.c(61): warning:  #550-D: variable "face_id"  was set but never used
-  static u8 face_id = 0xFF;
-User\main.c(66): warning:  #550-D: variable "admin_registered"  was set but never used
+User\main.c(67): warning:  #550-D: variable "admin_registered"  was set but never used
   static u8 admin_registered = 0;
-User\main.c(558): warning:  #177-D: function "ShowFaceManagePage"  was declared but never referenced
+User\main.c(75): warning:  #550-D: variable "op_pwd_result"  was set but never used
+  static u8 op_pwd_result = 0;
+User\main.c(553): warning:  #177-D: function "StringOfStars"  was declared but never referenced
+  static const char* StringOfStars(u8 count)
+User\main.c(699): warning:  #177-D: function "ShowFaceManagePage"  was declared but never referenced
   static void ShowFaceManagePage(void)
-User\main.c(669): warning:  #177-D: function "WaitAdminFace"  was declared but never referenced
+User\main.c(833): warning:  #177-D: function "WaitAdminFace"  was declared but never referenced
   static u8 WaitAdminFace(void)
-User\main.c(779): warning:  #177-D: function "StartAdminEnroll"  was declared but never referenced
+User\main.c(943): warning:  #177-D: function "StartAdminEnroll"  was declared but never referenced
   static void StartAdminEnroll(void)
-User\main.c: 7 warnings, 0 errors
+User\main.c(973): warning:  #177-D: function "AdminAuth_Process"  was declared but never referenced
+  static void AdminAuth_Process(void)
+User\main.c(997): warning:  #177-D: function "AdminMenu_Switch"  was declared but never referenced
+  static void AdminMenu_Switch(void)
+User\main.c: 9 warnings, 0 errors
 linking...
-Program Size: Code=19664 RO-data=2912 RW-data=9736 ZI-data=2608  
-".\Objects\Project.axf" - 0 Error(s), 7 Warning(s).
+Program Size: Code=21328 RO-data=3012 RW-data=10212 ZI-data=3188  
+".\Objects\Project.axf" - 0 Error(s), 9 Warning(s).
 
 <h2>Software Packages used:</h2>
 

@@ -1,0 +1,20 @@
+#include "hc_sr501.h"
+#include "stm32f10x_gpio.h"
+#include "stm32f10x_rcc.h"
+
+void HC_SR501_Init(void)
+{
+    GPIO_InitTypeDef gpio;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+
+    gpio.GPIO_Pin = GPIO_Pin_1;
+    gpio.GPIO_Mode = GPIO_Mode_IPD;
+    gpio.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &gpio);
+}
+
+u8 HC_SR501_Read(void)
+{
+    return (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == Bit_SET) ? 1 : 0;
+}

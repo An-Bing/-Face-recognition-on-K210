@@ -200,6 +200,103 @@ void ESP8266_SendJsonStatus(u8 door_state, u8 light_percent, u8 usb_light)
     UsartPrintf(USART1, "{\"door\":%d,\"light\":%d,\"usb\":%d}\r\n", door_state, light_percent, usb_light);
 }
 
+
+static u8 ESP01S_EncryptByte(u8 value, u8 key, u16 idx)
+{
+    return (u8)(value ^ (u8)(key + (idx * 13u)));
+}
+
+void ESP01S_SendLogLine(const char *log)
+{
+    if(log == 0)
+    {
+        return;
+    }
+    UsartPrintf(USART1, "$LOG,%s\r\n", log);
+}
+
+void ESP01S_SendBlurEncryptedImage(const u8 *gray, u16 width, u16 height, u8 key)
+{
+    u16 x;
+    u16 y;
+    u16 i;
+    u16 pixel_count;
+    u16 chunk_idx;
+    u16 chunk_total;
+    u16 chunk_offset;
+    u16 chunk_size;
+    u8 blurred[256];
+    u8 encrypted[32];
+    char hex[65];
+
+    if(gray == 0)
+    {
+        return;
+    }
+    if(width == 0 || height == 0 || width > 16 || height > 16)
+    {
+        return;
+    }
+
+    pixel_count = (u16)(width * height);
+
+    for(y = 0; y < height; y++)
+    {
+        for(x = 0; x < width; x++)
+        {
+            u16 sum = 0;
+            u16 cnt = 0;
+            s16 dx;
+            s16 dy;
+
+            for(dy = -1; dy <= 1; dy++)
+            {
+                for(dx = -1; dx <= 1; dx++)
+                {
+                    s16 nx = (s16)x + dx;
+                    s16 ny = (s16)y + dy;
+                    if(nx >= 0 && nx < (s16)width && ny >= 0 && ny < (s16)height)
+                    {
+                        sum += gray[(u16)ny * width + (u16)nx];
+                        cnt++;
+                    }
+                }
+            }
+
+            blurred[y * width + x] = (u8)(sum / cnt);
+        }
+    }
+
+    chunk_total = (u16)((pixel_count + 31u) / 32u);
+
+    for(chunk_idx = 0; chunk_idx < chunk_total; chunk_idx++)
+    {
+        chunk_offset = (u16)(chunk_idx * 32u);
+        chunk_size = (u16)((pixel_count - chunk_offset) > 32u ? 32u : (pixel_count - chunk_offset));
+
+        for(i = 0; i < chunk_size; i++)
+        {
+            encrypted[i] = ESP01S_EncryptByte(blurred[chunk_offset + i], key, (u16)(chunk_offset + i));
+        }
+
+        for(i = 0; i < chunk_size; i++)
+        {
+            static const char lut[] = "0123456789ABCDEF";
+            hex[i * 2] = lut[(encrypted[i] >> 4) & 0x0F];
+            hex[i * 2 + 1] = lut[encrypted[i] & 0x0F];
+        }
+        hex[chunk_size * 2] = '\0';
+
+        UsartPrintf(USART1,
+                    "$IMG,%d,%d,%d,%d,%d,%s\r\n",
+                    (int)(chunk_idx + 1),
+                    (int)chunk_total,
+                    (int)width,
+                    (int)height,
+                    (int)chunk_size,
+                    hex);
+    }
+}
 void USART1_IRQHandler(void)
 {
     u8 data;
@@ -265,3 +362,4 @@ void USART2_IRQHandler(void)
         }
     }
 }
+

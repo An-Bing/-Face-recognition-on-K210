@@ -26,4 +26,10 @@ u8 ESP8266_GetCommand(u8 *cmd, u8 *value);
 void ESP8266_SendFrame(u8 cmd, u8 value);
 void ESP8266_SendJsonStatus(u8 door_state, u8 light_percent, u8 usb_light);
 
+/* ESP-01S upload helpers on USART1(PA9/PA10) */
+void ESP01S_SendLogLine(const char *log);
+void ESP01S_SendBlurEncryptedImage(const u8 *gray, u16 width, u16 height, u8 key);
+
 #endif
+
+

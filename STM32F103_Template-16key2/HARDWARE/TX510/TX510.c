@@ -8,7 +8,7 @@ static volatile u8 rx_state = 0;
 static volatile u8 rx_cmd = 0;
 static volatile u8 rx_len = 0;
 static volatile u8 rx_index = 0;
-static volatile u8 rx_buf[16];
+static volatile u8 rx_buf[80];
 
 static volatile u8 face_state = K210_FACE_NONE;
 static volatile u8 face_id = 0xFF;
@@ -20,6 +20,14 @@ static volatile u8 op_result = 0;
 static volatile u8 op_slot = 0xFF;
 static volatile u8 op_total = 0;
 static volatile u8 op_update = 0;
+
+static volatile u8 gray_w = 0;
+static volatile u8 gray_h = 0;
+static volatile u8 gray_seq = 0;
+static volatile u16 gray_recv_count = 0;
+static volatile u8 gray_recv_map[K210_GRAY_MAX_PIXELS];
+static volatile u8 gray_buf[K210_GRAY_MAX_PIXELS];
+static volatile u8 gray_ready = 0;
 
 static u8 K210_Checksum(u8 cmd, u8 len, const u8 *payload)
 {
@@ -51,6 +59,62 @@ static void K210_HandleFrame(u8 cmd, u8 len, const u8 *payload)
         op_total = payload[3];
         face_total = payload[3];
         op_update = 1;
+    }
+    else if(cmd == 0x83 && len >= 3)
+    {
+        u16 i;
+        u16 pixels;
+        gray_w = payload[0];
+        gray_h = payload[1];
+        gray_seq = payload[2];
+        gray_recv_count = 0;
+        gray_ready = 0;
+        pixels = (u16)gray_w * (u16)gray_h;
+        if(pixels > K210_GRAY_MAX_PIXELS)
+        {
+            gray_w = 0;
+            gray_h = 0;
+            return;
+        }
+        for(i = 0; i < pixels; i++)
+        {
+            gray_recv_map[i] = 0;
+        }
+    }
+    else if(cmd == 0x84 && len >= 3)
+    {
+        u16 i;
+        u16 pixels = (u16)gray_w * (u16)gray_h;
+        u16 offset = ((u16)payload[0] << 8) | payload[1];
+        u8 chunk_len = payload[2];
+
+        if(gray_w == 0 || gray_h == 0)
+        {
+            return;
+        }
+        if((u16)(3 + chunk_len) > len)
+        {
+            return;
+        }
+        if(offset >= pixels)
+        {
+            return;
+        }
+
+        for(i = 0; i < chunk_len && (offset + i) < pixels; i++)
+        {
+            gray_buf[offset + i] = payload[3 + i];
+            if(gray_recv_map[offset + i] == 0)
+            {
+                gray_recv_map[offset + i] = 1;
+                gray_recv_count++;
+            }
+        }
+
+        if(gray_recv_count >= pixels)
+        {
+            gray_ready = 1;
+        }
     }
 }
 
@@ -234,6 +298,39 @@ u8 K210_FetchOpResult(u8 *op, u8 *result, u8 *slot, u8 *total)
     return ret;
 }
 
+u8 K210_FetchGrayImage(u8 *buf, u16 max_len, u8 *w, u8 *h, u8 *seq)
+{
+    u16 i;
+    u16 pixels;
+    u8 ret = 0;
+
+    if(buf == 0 || w == 0 || h == 0 || seq == 0)
+    {
+        return 0;
+    }
+
+    __disable_irq();
+    if(gray_ready)
+    {
+        pixels = (u16)gray_w * (u16)gray_h;
+        if(pixels <= max_len && pixels <= K210_GRAY_MAX_PIXELS)
+        {
+            for(i = 0; i < pixels; i++)
+            {
+                buf[i] = gray_buf[i];
+            }
+            *w = gray_w;
+            *h = gray_h;
+            *seq = gray_seq;
+            ret = 1;
+        }
+        gray_ready = 0;
+    }
+    __enable_irq();
+
+    return ret;
+}
+
 void K210_ClearFaceUpdate(void)
 {
     __disable_irq();
@@ -245,5 +342,15 @@ void K210_ClearOpResult(void)
 {
     __disable_irq();
     op_update = 0;
+    __enable_irq();
+}
+
+void K210_ClearGrayImage(void)
+{
+    __disable_irq();
+    gray_ready = 0;
+    gray_recv_count = 0;
+    gray_w = 0;
+    gray_h = 0;
     __enable_irq();
 }

@@ -37,5 +37,6 @@
 .\objects\main.o: .\SYSTEM\usart\usart.h
 .\objects\main.o: .\HARDWARE\TX510\TX510.h
 .\objects\main.o: .\HARDWARE\DS1302\ds1302.h
+.\objects\main.o: .\HARDWARE\HC-SR501\SR501.h
 .\objects\main.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 .\objects\main.o: C:\Users\ab\AppData\Local\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
